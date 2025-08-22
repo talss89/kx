@@ -10,10 +10,7 @@ version: 2
 
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
-    # you may remove this if you don't need go generate
-    - go generate ./...
 
 builds:
   - env:
@@ -22,7 +19,7 @@ builds:
       # - linux
       - darwin
       # - windows
-    main: ./cmd/kx/main.go
+    main: ./main.go
     binary: kx
 
 archives:
@@ -49,6 +46,7 @@ changelog:
       - "^ci:"
 
 release:
+  mode: append
   footer: >-
 
     ---
