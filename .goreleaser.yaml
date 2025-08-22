@@ -16,7 +16,7 @@ builds:
   - env:
       - CGO_ENABLED=0
     goos:
-      # - linux
+      - linux
       - darwin
       # - windows
     main: ./main.go
