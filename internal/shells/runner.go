@@ -34,7 +34,7 @@ func writeRcFile(rcFilePath string, rcFile []byte) error {
 	if err != nil {
 		return fmt.Errorf("failed to create rc file: %w", err)
 	}
-	defer rcFileHandle.Close()
+	defer func() { _ = rcFileHandle.Close() }()
 
 	_, err = rcFileHandle.Write(rcFile)
 	if err != nil {
@@ -77,8 +77,9 @@ func Run(session interfaces.SessionInterface, shell interfaces.ShellAdapter) (*o
 
 	bootstrapCmd := shell.GetBootstrap(session.GetRcFilePath() + "\n")
 
-	shellPty.WriteString(bootstrapCmd)
-	shellPty.Sync()
+	if _, err := shellPty.WriteString(bootstrapCmd); err != nil {
+		return nil, err
+	}
 
 	// Make sure to close the pty at the end.
 	defer func() { _ = shellPty.Close() }() // Best effort.
@@ -107,9 +108,13 @@ func Run(session interfaces.SessionInterface, shell interfaces.ShellAdapter) (*o
 	// NOTE: The goroutine will keep reading until the next keystroke before returning.
 	go func() { _, _ = io.Copy(shellPty, os.Stdin) }()
 
-	io.CopyN(io.Discard, shellPty, int64(len([]byte(bootstrapCmd))))
+	if _, err := io.CopyN(io.Discard, shellPty, int64(len([]byte(bootstrapCmd)))); err != nil {
+		return nil, err
+	}
 
-	shell.WaitForStart(shellPty)
+	if err := shell.WaitForStart(shellPty); err != nil {
+		return nil, err
+	}
 
 	_, _ = io.Copy(os.Stdout, shellPty)
 

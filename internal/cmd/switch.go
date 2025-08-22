@@ -26,8 +26,13 @@ func beginSession(session *session.Session, duration time.Duration) error {
 
 		if result {
 			fmt.Print("\n\033[2m\033[3mExtending session...\033[0m\n")
-			session.Extend(duration)
-			beginSession(session, duration) // Recursively call to extend the session
+			if err := session.Extend(duration); err != nil {
+				return err
+			}
+
+			if err := beginSession(session, duration); err != nil {
+				return err
+			}
 		}
 
 	}
@@ -92,7 +97,7 @@ func SwitchAction(_ context.Context, command *cli.Command) error {
 
 	pterm.DefaultHeader.WithFullWidth(true).WithMargin(15).WithBackgroundStyle(pterm.NewStyle(pterm.BgGray)).WithTextStyle(pterm.NewStyle(pterm.FgCyan)).Println("Switched into the '" + selectedContext + "' context for " + duration.String())
 
-	defer session.Destroy()
+	defer func() { _ = session.Destroy() }()
 
 	err = beginSession(session, duration)
 

@@ -56,7 +56,8 @@ func GetSessionProperties(sessionPath string) (*SessionProperties, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer sessionPropertiesFile.Close()
+
+	defer func() { _ = sessionPropertiesFile.Close() }()
 
 	var props SessionProperties
 	if err := yaml.NewDecoder(sessionPropertiesFile).Decode(&props); err != nil {
@@ -77,9 +78,11 @@ func (s *Session) init(duration time.Duration) error {
 	if err != nil {
 		return err
 	}
-	defer kubeconfigFile.Close()
+	defer func() { _ = kubeconfigFile.Close() }()
 
-	kc.WriteKubeconfig(s.kubeconfig, kubeconfigFile)
+	if err := kc.WriteKubeconfig(s.kubeconfig, kubeconfigFile); err != nil {
+		return err
+	}
 
 	return s.Extend(duration)
 }
@@ -94,7 +97,7 @@ func (s *Session) Extend(duration time.Duration) error {
 	if err != nil {
 		return err
 	}
-	defer sessionPropertiesFile.Close()
+	defer func() { _ = sessionPropertiesFile.Close() }()
 
 	props := SessionProperties{
 		ExpiresAt: time.Now().Add(duration),
