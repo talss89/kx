@@ -2,8 +2,6 @@ name: Semantic Release
 
 on:
   push:
-    branches:
-      - main
 
 permissions:
   contents: write
@@ -37,3 +35,5 @@ jobs:
             distribution: goreleaser
             version: '~> v2'
             args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
