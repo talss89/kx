@@ -23,6 +23,7 @@ type Session struct {
 	context      string
 	kubeconfig   *api.Config
 	shell        interfaces.ShellAdapter
+	expiresAt    time.Time
 }
 
 func NewSession(id string, path string, duration time.Duration, config *api.Config, context string, shell interfaces.ShellAdapter) (*Session, error) {
@@ -34,8 +35,10 @@ func NewSession(id string, path string, duration time.Duration, config *api.Conf
 	kubeconfig := config.DeepCopy()
 	kubeconfig.CurrentContext = context
 
-	sess := Session{id, path, context, kubeconfig, shell}
-	err := sess.init(duration)
+	expiresAt := time.Now().Add(duration)
+
+	sess := Session{id, path, context, kubeconfig, shell, expiresAt}
+	err := sess.init(expiresAt)
 
 	if err != nil {
 		return nil, err
@@ -67,7 +70,7 @@ func GetSessionProperties(sessionPath string) (*SessionProperties, error) {
 	return &props, nil
 }
 
-func (s *Session) init(duration time.Duration) error {
+func (s *Session) init(expiresAt time.Time) error {
 
 	if err := os.Mkdir(s.GetSessionPath(), 0700); err != nil {
 		fmt.Printf("Error creating session directory: %v\n", err)
@@ -84,14 +87,14 @@ func (s *Session) init(duration time.Duration) error {
 		return err
 	}
 
-	return s.Extend(duration)
+	return s.writeProperties(expiresAt)
 }
 
 func (s *Session) Start() (*os.ProcessState, error) {
 	return s.shell.Run(s)
 }
 
-func (s *Session) Extend(duration time.Duration) error {
+func (s *Session) writeProperties(expiresAt time.Time) error {
 
 	sessionPropertiesFile, err := os.Create(s.GetSessionPropertiesPath())
 	if err != nil {
@@ -100,7 +103,7 @@ func (s *Session) Extend(duration time.Duration) error {
 	defer func() { _ = sessionPropertiesFile.Close() }()
 
 	props := SessionProperties{
-		ExpiresAt: time.Now().Add(duration),
+		ExpiresAt: expiresAt,
 		PID:       os.Getpid(),
 	}
 	if err := yaml.NewEncoder(sessionPropertiesFile).Encode(props); err != nil {
@@ -108,6 +111,10 @@ func (s *Session) Extend(duration time.Duration) error {
 	}
 
 	return nil
+}
+
+func (s *Session) Extend(duration time.Duration) error {
+	return s.writeProperties(time.Now().Add(duration))
 }
 
 func (s *Session) Destroy() error {
@@ -143,4 +150,8 @@ func (s *Session) GetRcFilePath() string {
 
 func (s *Session) GetId() string {
 	return s.id
+}
+
+func (s *Session) GetExpiresAt() time.Time {
+	return s.expiresAt
 }

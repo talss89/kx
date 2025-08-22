@@ -84,7 +84,14 @@ func SwitchAction(_ context.Context, command *cli.Command) error {
 		options = append(options, ctx)
 	}
 
-	selectedContext, _ := pterm.DefaultInteractiveSelect.WithOptions(options).Show("Select a Kubernetes context")
+	selectedContext := command.String("context")
+
+	if command.String("context") == "" {
+		selectedContext, err = pterm.DefaultInteractiveSelect.WithOptions(options).Show("Select a Kubernetes context")
+		if err != nil {
+			return err
+		}
+	}
 
 	session, err := session.NewSession(uuid.New().String(), userHomeDir, duration, config, selectedContext, shellAdapter)
 
