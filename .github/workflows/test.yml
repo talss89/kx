@@ -4,6 +4,18 @@ on:
   workflow_call:
 
 jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
   test:
     runs-on: ubuntu-24.04
     steps:
@@ -16,4 +28,4 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
       - name: Run tests
-        run: go test ./...
+        run: make test

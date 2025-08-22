@@ -1,11 +1,11 @@
 APP_NAME := kx
 
-.PHONY: build run clean test
+.PHONY: build run clean test lint
 
 build:
 	go build -o ./bin/$(APP_NAME) ./main.go
 
-run: build 
+run: build
 	./bin/$(APP_NAME) --shell $$SHELL
 
 clean:
@@ -14,3 +14,6 @@ clean:
 
 test:
 	go test ./...
+
+lint:
+	golangci-lint run ./...

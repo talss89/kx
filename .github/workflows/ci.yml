@@ -1,4 +1,4 @@
-name: Semantic Release
+name: Continuous Integration
 
 on:
   push:
@@ -13,23 +13,23 @@ jobs:
   release:
     needs: [test]
     runs-on: ubuntu-24.04
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+
+      - name: Semantic Release
+        id: semantic_release
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Go
+        if: steps.semantic_release.outputs.new_release_published == 'true'
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
-    
-      - name: Semantic Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
       - name: Run GoReleaser
+        if: steps.semantic_release.outputs.new_release_published == 'true'
         uses: goreleaser/goreleaser-action@v5
         with:
             distribution: goreleaser
