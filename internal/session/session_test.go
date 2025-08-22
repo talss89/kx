@@ -20,7 +20,7 @@ func TestNewSession(t *testing.T) {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 
-	defer os.RemoveAll(kxHomeTestPath)
+	defer func() { _ = os.RemoveAll(kxHomeTestPath) }()
 
 	client := clientcmd.NewDefaultClientConfigLoadingRules()
 	client.ExplicitPath = "testdata/kubeconfig.yaml"
@@ -33,7 +33,7 @@ func TestNewSession(t *testing.T) {
 
 	t.Run("Check session directories are created", func(t *testing.T) {
 		session, err := NewSession("test", kxHomeTestPath, time.Duration(5*time.Minute), kubeconfig, "example-context", &shells.NullShellAdapter{})
-		defer session.Destroy()
+		defer func() { _ = session.Destroy() }()
 
 		if err != nil {
 			t.Fatalf("Failed to create session: %v", err)
@@ -59,7 +59,9 @@ func TestNewSession(t *testing.T) {
 			t.Fatalf("Failed to create session: %v", err)
 		}
 
-		session.Destroy()
+		if err := session.Destroy(); err != nil {
+			t.Fatalf("Failed to destroy session: %v", err)
+		}
 
 		if _, err := os.Stat(session.GetSessionPath()); !os.IsNotExist(err) {
 			t.Fatalf("Expected session directory to be destroyed")
@@ -95,7 +97,7 @@ func TestNewSession(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create session: %v", err)
 		}
-		defer session.Destroy()
+		defer func() { _ = session.Destroy() }()
 
 		client := clientcmd.NewDefaultClientConfigLoadingRules()
 		client.ExplicitPath = session.GetKubeconfigPath()
