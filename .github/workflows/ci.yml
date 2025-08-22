@@ -24,12 +24,13 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
-    
+
       - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
       - name: Run GoReleaser
+        if: github.ref == 'refs/tags/v*'
         uses: goreleaser/goreleaser-action@v5
         with:
             distribution: goreleaser
