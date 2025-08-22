@@ -37,6 +37,12 @@ func main() {
 				Value: "",
 				Usage: "Shell to invoke",
 			},
+			&cli.StringFlag{
+				Name:    "context",
+				Aliases: []string{"ctx"},
+				Value:   "",
+				Usage:   "Kubernetes context to switch to",
+			},
 		},
 		Action: cmd.SwitchAction,
 	}

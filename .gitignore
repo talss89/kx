@@ -8,6 +8,7 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.coverprofile
+.coverdata
 
 # Go workspace file
 go.work
