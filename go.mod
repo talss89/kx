@@ -4,6 +4,7 @@ go 1.24.3
 
 require (
 	github.com/creack/pty v1.1.24
+	github.com/google/uuid v1.6.0
 	github.com/pterm/pterm v0.12.81
 	github.com/urfave/cli/v3 v3.4.1
 	golang.org/x/term v0.32.0
@@ -22,7 +23,6 @@ require (
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
