@@ -20,7 +20,7 @@ func beginSession(session *session.Session, duration time.Duration) error {
 		return err
 	}
 
-	if rc != nil && rc.ExitCode() == 86 {
+	if rc != nil && rc.ExitCode() == E_SessionExpired {
 		fmt.Println("")
 		result, _ := pterm.DefaultInteractiveConfirm.WithDefaultValue(true).Show("❓ Would you like to extend your session?")
 
@@ -52,8 +52,7 @@ func SwitchAction(_ context.Context, command *cli.Command) error {
 	if durationString != "" {
 		parsedDuration, err := time.ParseDuration(durationString)
 		if err != nil {
-			fmt.Printf("Invalid duration format: %v\n", err)
-			return nil
+			return cli.Exit(fmt.Sprintf("%v", err), E_BadDuration)
 		}
 		duration = parsedDuration
 	}
@@ -61,22 +60,19 @@ func SwitchAction(_ context.Context, command *cli.Command) error {
 	sh, err := shells.DiscoverShell(command)
 
 	if err != nil {
-		fmt.Printf("Error discovering shell: %v\n", err)
-		return nil
+		return cli.Exit(fmt.Sprintf("%v", err), E_BadShell)
 	}
 
 	shellAdapter, err := shells.NewShellAdapter(sh)
 
 	if err != nil {
-		fmt.Printf("Error creating shell adapter: %v\n", err)
-		return nil
+		return cli.Exit(fmt.Sprintf("%v", err), E_BadShell)
 	}
 
 	config, err := kubeconfig.LoadKubeconfig()
 
 	if err != nil {
-		fmt.Printf("Error loading kubeconfig: %v\n", err)
-		return nil
+		return cli.Exit(fmt.Sprintf("%v", err), E_BadKubeconfig)
 	}
 
 	options := make([]string, 0, len(config.Contexts))
@@ -89,15 +85,14 @@ func SwitchAction(_ context.Context, command *cli.Command) error {
 	if command.String("context") == "" {
 		selectedContext, err = pterm.DefaultInteractiveSelect.WithOptions(options).Show("Select a Kubernetes context")
 		if err != nil {
-			return err
+			return cli.Exit(fmt.Sprintf("%v", err), E_Unknown)
 		}
 	}
 
 	session, err := session.NewSession(uuid.New().String(), userHomeDir, duration, config, selectedContext, shellAdapter)
 
 	if err != nil {
-		fmt.Printf("Error creating session: %v\n", err)
-		return nil
+		return cli.Exit(fmt.Sprintf("%v", err), E_SessionError)
 	}
 
 	fmt.Println("")
@@ -111,5 +106,9 @@ func SwitchAction(_ context.Context, command *cli.Command) error {
 	fmt.Println("")
 	pterm.DefaultHeader.WithFullWidth(true).WithMargin(15).WithBackgroundStyle(pterm.NewStyle(pterm.BgGray)).WithTextStyle(pterm.NewStyle(pterm.FgLightCyan)).Println("You are now back in your previous context")
 
-	return err
+	if err != nil {
+		cli.Exit(fmt.Sprintf("%v", err), E_Unknown)
+	}
+
+	return cli.Exit("", 0)
 }

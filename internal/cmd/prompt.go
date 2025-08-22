@@ -36,7 +36,7 @@ func PromptAction(_ context.Context, cmd *cli.Command) error {
 
 	out, err := exec.Command("kubectl", "config", "current-context").Output()
 	if err != nil {
-		return cli.Exit(fmt.Sprintf("Failed to get current context: %v", err), 255)
+		return cli.Exit(fmt.Sprintf("Failed to get current context: %v", err), E_KubectlFailed)
 	}
 	currentContext := strings.TrimSpace(string(out))
 

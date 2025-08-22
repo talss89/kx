@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -15,13 +14,11 @@ func CheckTimeAction(_ context.Context, cmd *cli.Command) error {
 	session, err := session.GetSessionProperties(os.Getenv("KX_SESSION_PATH"))
 
 	if err != nil {
-		fmt.Println("")
-		return cli.Exit("Failed to open session properties", 255)
+		return cli.Exit("Failed to open session properties", E_SessionError)
 	}
 
 	if time.Until(session.ExpiresAt) < 0 {
-		fmt.Println("")
-		return cli.Exit("\033[31m💥 Your temporary kx session has expired\033[0m", 86)
+		return cli.Exit("\033[31m💥 Your temporary kx session has expired\033[0m", E_SessionExpired)
 	}
 
 	return nil
