@@ -29,3 +29,8 @@ jobs:
         run: go mod tidy
       - name: Run tests
         run: make test
+      - name: Summary
+        run: |
+          echo "### `go test` Coverage " >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=.coverdata/coverage.txt >> $GITHUB_STEP_SUMMARY
