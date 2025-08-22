@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,6 +30,15 @@ func beginSession(session *session.Session, duration time.Duration) error {
 			if err := session.Extend(duration); err != nil {
 				return err
 			}
+
+			// Preserve the current kubernetes context, don't switch back to the original
+
+			currentContext, err := kubeconfig.GetCurrentContext()
+			if err != nil {
+				return err
+			}
+
+			session.SetContext(currentContext)
 
 			if err := beginSession(session, duration); err != nil {
 				return err
@@ -75,15 +85,21 @@ func SwitchAction(_ context.Context, command *cli.Command) error {
 		return cli.Exit(fmt.Sprintf("%v", err), E_BadKubeconfig)
 	}
 
+	fmt.Println("")
+	fmt.Print("\n\033[2m\033[3mStarting a time-boxed Kubernetes session for " + duration.String() + "\033[0m\n")
+	fmt.Println("")
+
 	options := make([]string, 0, len(config.Contexts))
 	for ctx := range config.Contexts {
 		options = append(options, ctx)
 	}
 
+	sort.Strings(options)
+
 	selectedContext := command.String("context")
 
 	if command.String("context") == "" {
-		selectedContext, err = pterm.DefaultInteractiveSelect.WithOptions(options).Show("Select a Kubernetes context")
+		selectedContext, err = pterm.DefaultInteractiveSelect.WithMaxHeight(20).WithOptions(options).Show("Select a Kubernetes context")
 		if err != nil {
 			return cli.Exit(fmt.Sprintf("%v", err), E_Unknown)
 		}
@@ -97,18 +113,29 @@ func SwitchAction(_ context.Context, command *cli.Command) error {
 
 	fmt.Println("")
 
-	pterm.DefaultHeader.WithFullWidth(true).WithMargin(15).WithBackgroundStyle(pterm.NewStyle(pterm.BgGray)).WithTextStyle(pterm.NewStyle(pterm.FgCyan)).Println("Switched into the '" + selectedContext + "' context for " + duration.String())
+	header := pterm.HeaderPrinter{
+		TextStyle:       pterm.NewStyle(pterm.FgWhite, pterm.Italic),
+		BackgroundStyle: pterm.NewStyle(pterm.BgDarkGray),
+		Margin:          10,
+	}
+
+	header.Println("Switched into the '" + selectedContext + "' context for " + duration.String())
 
 	defer func() { _ = session.Destroy() }()
 
 	err = beginSession(session, duration)
 
-	fmt.Println("")
-	pterm.DefaultHeader.WithFullWidth(true).WithMargin(15).WithBackgroundStyle(pterm.NewStyle(pterm.BgGray)).WithTextStyle(pterm.NewStyle(pterm.FgLightCyan)).Println("You are now back in your previous context")
-
 	if err != nil {
-		cli.Exit(fmt.Sprintf("%v", err), E_Unknown)
+		return cli.Exit(fmt.Sprintf("%v", err), E_Unknown)
 	}
+
+	currentContext, err := kubeconfig.GetCurrentContext()
+	if err != nil {
+		return cli.Exit(fmt.Sprintf("Failed to get current context: %v", err), E_KubectlFailed)
+	}
+
+	fmt.Println("")
+	header.Printf("You are now back in your previous context: '%s'", currentContext)
 
 	return cli.Exit("", 0)
 }

@@ -117,6 +117,10 @@ func (s *Session) Extend(duration time.Duration) error {
 	return s.writeProperties(time.Now().Add(duration))
 }
 
+func (s *Session) SetContext(context string) {
+	s.context = context
+}
+
 func (s *Session) Destroy() error {
 	if err := os.RemoveAll(s.GetSessionPath()); err != nil {
 		fmt.Printf("Error removing session directory: %v\n", err)

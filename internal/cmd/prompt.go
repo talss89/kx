@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 	"time"
 
+	"github.com/talss89/kx/internal/kubeconfig"
 	"github.com/talss89/kx/internal/session"
 	"github.com/urfave/cli/v3"
 )
@@ -34,11 +33,10 @@ func PromptAction(_ context.Context, cmd *cli.Command) error {
 		colorCode = "\033[31m" // Red
 	}
 
-	out, err := exec.Command("kubectl", "config", "current-context").Output()
+	currentContext, err := kubeconfig.GetCurrentContext()
 	if err != nil {
 		return cli.Exit(fmt.Sprintf("Failed to get current context: %v", err), E_KubectlFailed)
 	}
-	currentContext := strings.TrimSpace(string(out))
 
 	fmt.Printf("\033[2m- \033[35m%s\033[0m%s expires in %v. \033[90m\033[2mType 'exit' to end early\033[0m\n", currentContext, colorCode, remaining.Round(time.Second))
 
