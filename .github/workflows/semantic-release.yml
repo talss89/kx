@@ -35,5 +35,5 @@ jobs:
         uses: goreleaser/goreleaser-action@v5
         with:
             distribution: goreleaser
-            version: '~> v1'
+            version: '~> v2'
             args: release --clean
