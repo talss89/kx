@@ -5,11 +5,15 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   test:
     uses: ./.github/workflows/test.yml
 
   release:
+    needs: [test]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -22,17 +26,14 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
-      - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v5
-        with:
-          version: latest
-      - name: Install dependencies
-        run: npm install
+    
       - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
       - name: Run GoReleaser
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: goreleaser release --clean
+        uses: goreleaser/goreleaser-action@v5
+        with:
+            distribution: goreleaser
+            version: '~> v1'
+            args: release --clean
