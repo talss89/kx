@@ -38,10 +38,11 @@ To dive straight into a named context:
 ```bash
 kx --ctx your-context
 ```
-
 ## Demo
 
-[![asciicast](https://asciinema.org/a/sUREVlvJEpai9iAAtmSCLnbUp.svg)](https://asciinema.org/a/sUREVlvJEpai9iAAtmSCLnbUp)
+<p align="center">
+  <img src="assets/demo.cast.svg" alt="asciicast demo">
+</p>
 
 ## State of the project
 
