@@ -22,7 +22,12 @@ func DiscoverShell(command *cli.Command) (string, error) {
 		}
 	}
 
-	return sh, nil
+	return normaliseShellName(sh), nil
+}
+
+func normaliseShellName(shell string) string {
+	shell = strings.TrimPrefix(shell, "-")
+	return shell
 }
 
 func detectShellFromParent() (string, error) {
@@ -42,6 +47,7 @@ func detectShellFromParent() (string, error) {
 	}
 	parentExe := string(output)
 	parentExe = strings.TrimSpace(parentExe)
+
 	if parentExe == "" {
 		fmt.Printf("Parent executable not found\n")
 		return "", err
