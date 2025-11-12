@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pterm/pterm"
+	"github.com/talss89/kx/internal/environment"
 	"github.com/talss89/kx/internal/kubeconfig"
 	"github.com/talss89/kx/internal/session"
 	"github.com/talss89/kx/internal/shells"
@@ -51,6 +52,10 @@ func beginSession(session *session.Session, duration time.Duration) error {
 }
 
 func SwitchAction(_ context.Context, command *cli.Command) error {
+
+    if environment.IsInKxSession() {
+        return cli.Exit("You are already in a kx session. Nested sessions are not supported.", E_AlreadyInSession)
+    }
 
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {

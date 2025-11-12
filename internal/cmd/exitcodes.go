@@ -7,5 +7,6 @@ const (
 	E_BadDuration
 	E_BadShell
 	E_BadKubeconfig
+    E_AlreadyInSession
 	E_Unknown = 255
 )
