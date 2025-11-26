@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"time"
 
@@ -53,13 +54,19 @@ func beginSession(session *session.Session, duration time.Duration) error {
 
 func SwitchAction(_ context.Context, command *cli.Command) error {
 
-    if environment.IsInKxSession() {
-        return cli.Exit("You are already in a kx session. Nested sessions are not supported.", E_AlreadyInSession)
-    }
+	if environment.IsInKxSession() {
+		return cli.Exit("You are already in a kx session. Nested sessions are not supported.", E_AlreadyInSession)
+	}
 
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		return err
+	}
+
+	kxHomeDir := filepath.Join(userHomeDir, ".kx", "sessions")
+
+	if err := os.MkdirAll(kxHomeDir, 0700); err != nil {
+		return cli.Exit(fmt.Sprintf("Failed to create kx home directory: %v", err), E_Unknown)
 	}
 
 	duration := 5 * time.Minute
@@ -110,7 +117,7 @@ func SwitchAction(_ context.Context, command *cli.Command) error {
 		}
 	}
 
-	session, err := session.NewSession(uuid.New().String(), userHomeDir, duration, config, selectedContext, shellAdapter)
+	session, err := session.NewSession(uuid.New().String(), kxHomeDir, duration, config, selectedContext, shellAdapter)
 
 	if err != nil {
 		return cli.Exit(fmt.Sprintf("%v", err), E_SessionError)
